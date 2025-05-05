@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration packages="com.stackify.log.log4j2">
+	<Appenders>
+
+		<Console name="STDOUT" target="SYSTEM_OUT">
+			<PatternLayout pattern="%-24d{dd-MMM-yyyy HH:mm:ss.SSS} [%X{traceId}/%X{spanId}] %p [%t] (%F%L) - %m%n" />
+		</Console>
+
+		<RollingFile name="R" immediateFlush="true"
+					 fileName="${sys:catalina.home}/logs/application.log"
+					 filePattern="${sys:catalina.home}/logs/application-%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%-24d{dd-MMM-yyyy HH:mm:ss.SSS} [%X{traceId}/%X{spanId}] %p %t %c - %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+
+		</RollingFile>
+
+
+	</Appenders>
+
+	<Loggers>
+
+		<Root level="ALL">
+			<AppenderRef ref="R" level="INFO"/>
+			<AppenderRef ref="STDOUT" level="INFO" />
+		</Root>
+
+		<Logger name="AppLogging">
+			<AppenderRef ref="R1" level="INFO" />
+			<AppenderRef ref="STDOUT" level="INFO" />
+		</Logger>
+
+
+		<logger name="org.springframework" level="TRACE" >
+			<AppenderRef ref="STDOUT" level="TRACE" />
+		</logger>
+
+		<logger name="org.springframework.security" level="TRACE" >
+			<AppenderRef ref="STDOUT" level="TRACE" />
+		</logger>
+	</Loggers>
+</Configuration>

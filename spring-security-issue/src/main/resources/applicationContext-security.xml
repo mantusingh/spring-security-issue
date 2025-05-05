@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+  xmlns="http://www.springframework.org/schema/security"
+  xmlns:beans="http://www.springframework.org/schema/beans"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+http://www.springframework.org/schema/security
+http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+
+    <context:annotation-config />
+    <context:component-scan base-package="com.ms.demo" />
+    <!-- spring MVC -->
+    <mvc:annotation-driven />
+    <mvc:resources mapping="/**" location="/" />
+
+
+    <beans:beans >
+        <!-- OAUTH specifics starts here -->
+
+        <beans:bean id="oauthAuthenticationEntryPoint"
+          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+            <beans:constructor-arg name="loginFormUrl" value="/test"/>
+        </beans:bean>
+
+        <beans:bean id="noopAuthenticationManager" class="com.ms.demo.NoopAuthManager" primary ="true"/>
+
+        <http pattern="/protected*/**" filter-all-dispatcher-types="false" use-authorization-manager="false" auto-config="true" create-session="always" use-expressions="true"
+          entry-point-ref="oauthAuthenticationEntryPoint"
+          authentication-manager-ref="noopAuthenticationManager">
+            <csrf disabled="true"/>
+            <access-denied-handler error-page="/test.jsp"/>
+            <intercept-url pattern="/test/admin/device.jsf"
+              access="hasAnyRole('ROLE_ADMIN')"/>
+            <intercept-url pattern="/test/agent/**" access="hasRole('ROLE_AGENT')"/>
+            <custom-filter ref="customOAuth2LoginAuthenticationFilter" before="OAUTH2_LOGIN_FILTER"/>
+            <custom-filter ref="oAuth2AuthorizationRequestRedirectFilter" before="OAUTH2_AUTHORIZATION_REQUEST_FILTER"/>
+            <oauth2-login authorized-client-repository-ref="authorizedClientRepository"
+              client-registration-repository-ref="clientRegistrationRepository"
+              authorized-client-service-ref="authorizedClientService"
+              authentication-success-handler-ref="redirectRoleStrategy"
+              authentication-failure-handler-ref="oAuthAuthenticationFailureHandler"
+              login-processing-url="/test/login"
+              authorization-request-resolver-ref="customOAuth2AuthorizationRequestResolver"
+            />
+            <anonymous enabled="false"/>
+            <logout
+              logout-url="/logout*"
+              logout-success-url="/"/>
+            <session-management session-authentication-error-url="/test"
+              invalid-session-url="/test"
+              session-fixation-protection="none"></session-management>
+        </http>
+
+
+
+
+
+        <beans:bean id="redirectRoleStrategy" class="com.ms.demo.RoleBasedAuthenticationSuccessHandler">
+            <beans:property name="roleUrlMap">
+                <beans:map>
+                    <beans:entry key="ROLE_ADMIN" value="/test/admin/test.jsf"/>
+                </beans:map>
+            </beans:property>
+        </beans:bean>
+
+    </beans:beans>
+
+</beans:beans>
